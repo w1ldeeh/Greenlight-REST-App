@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/jackc/pgx/v4/pgxpool"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
@@ -35,7 +36,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	//flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://greenlight:pa55word@localhost/greenlight?sslmode=disable", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://greenlight:pa55word@localhost/greenlight", "PostgreSQL DSN") // ?sslmode=disable
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleCons, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
@@ -43,12 +44,18 @@ func main() {
 
 	logger := log.New(os.Stdout, "BCC-", log.Ldate|log.Ltime)
 
-	db, err := openDB(cfg)
+	pool, err := pgxpool.Connect(context.Background(), cfg.db.dsn)
+	if err != nil {
+		log.Fatalf("Unable to connection to database: %v\n", err)
+	}
+	defer pool.Close()
+
+	logger.Printf("Connected!")
+	/*db, err := openDB(cfg)
 	if err != nil {
 		logger.Fatal(err)
 	}
-
-	defer db.Close()
+	defer db.Close()*/
 
 	logger.Printf("database connection pool established")
 
