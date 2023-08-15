@@ -52,8 +52,8 @@ func main() {
 	}
 	defer pool.Close()
 
-	logger.Printf("Connected!")
-	/*db, err := openDB(cfg)
+	/*logger.Printf("Connected!")
+	db, err := openDB(cfg)
 	if err != nil {
 		logger.Fatal(err)
 	}
