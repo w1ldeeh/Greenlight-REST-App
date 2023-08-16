@@ -4,13 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	_ "github.com/lib/pq"
 	"greenlight.bcc/internal/data"
 	"greenlight.bcc/internal/jsonlog"
-	"log"
-	"net/http"
 	"os"
 	"time"
 )
@@ -43,7 +40,7 @@ func main() {
 	var cfg config
 
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
-	//flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://greenlight:pa55word@localhost/greenlight", "PostgreSQL DSN") // ?sslmode=disable
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
@@ -64,13 +61,6 @@ func main() {
 	}
 	defer pool.Close()
 
-	/*logger.Printf("Connected!")
-	db, err := openDB(cfg)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	defer db.Close()*/
-
 	logger.PrintInfo("database connection pool established", nil)
 
 	app := &application{
@@ -79,19 +69,10 @@ func main() {
 		models: data.NewModels(pool),
 	}
 
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      app.routes(),
-		ErrorLog:     log.New(logger, "", 0),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+	err = app.serve()
+	if err != nil {
+		logger.PrintFatal(err, nil)
 	}
-
-	logger.PrintInfo("starting %s server on %s", map[string]string{"addr": srv.Addr, "env": cfg.env})
-
-	err = srv.ListenAndServe()
-	logger.PrintFatal(err, nil)
 }
 
 func openDB(cfg config) (*sql.DB, error) {
