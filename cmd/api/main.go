@@ -10,6 +10,7 @@ import (
 	"greenlight.bcc/internal/jsonlog"
 	"greenlight.bcc/internal/mailer"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -43,6 +44,7 @@ type application struct {
 	logger *jsonlog.Logger
 	models data.Models
 	mailer mailer.Mailer
+	wg     sync.WaitGroup
 }
 
 func main() {
@@ -83,6 +85,7 @@ func main() {
 		logger: logger,
 		models: data.NewModels(pool),
 		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
+		wg:     sync.WaitGroup{},
 	}
 
 	err = app.serve()
