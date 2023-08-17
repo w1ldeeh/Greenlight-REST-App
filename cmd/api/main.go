@@ -85,7 +85,7 @@ func main() {
 		logger: logger,
 		models: data.NewModels(pool),
 		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
-		wg:     sync.WaitGroup{},
+		wg:     sync.WaitGroup{}, // Можно и не инициализировать
 	}
 
 	err = app.serve()
